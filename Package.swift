@@ -8,6 +8,9 @@ let package = Package(
         .library(name: "VuvuzelaCore", targets: ["VuvuzelaCore"]),
         .executable(name: "Vuvuzela", targets: ["Vuvuzela"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.0.0"),
+    ],
     targets: [
         .target(
             name: "VuvuzelaCore",
@@ -16,7 +19,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "Vuvuzela",
-            dependencies: ["VuvuzelaCore"],
+            dependencies: [
+                "VuvuzelaCore",
+                .product(name: "Sparkle", package: "Sparkle"),
+            ],
             path: "Sources/Vuvuzela",
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Vuvuzela</title>
+        <link>https://github.com/bsnkhua/vuvuzela</link>
+        <description>FIFA World Cup 2026 desktop widget for macOS</description>
+        <language>en</language>
+        <item>
+            <title>Vuvuzela 1.0.0</title>
+            <pubDate>Sat, 07 Jun 2026 20:03:20 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/bsnkhua/vuvuzela/releases/download/v1.0.0/Vuvuzela.dmg"
+                length="851936"
+                type="application/octet-stream"
+                sparkle:edSignature="uU+N151KYY9VsvS9HpQrT3Pv6sgeUDAfFVa9AOMQmDlan0vrE0rfxO5VAxYPtsHvGdzrNfHY0kTMliRr3ThxCw=="
+            />
+        </item>
+    </channel>
+</rss>

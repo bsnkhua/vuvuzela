@@ -70,6 +70,61 @@ jobs:
       - name: Staple notarization ticket
         run: xcrun stapler staple dist/Vuvuzela.dmg
 
+      - name: Sign DMG for Sparkle
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          brew install --cask sparkle 2>/dev/null || true
+          SIGN_UPDATE=$(find /opt/homebrew/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
+          SPARKLE_OUTPUT=$(SPARKLE_PRIVATE_KEY="$SPARKLE_PRIVATE_KEY" "$SIGN_UPDATE" dist/Vuvuzela.dmg)
+          echo "$SPARKLE_OUTPUT"
+          ED_SIG=$(echo "$SPARKLE_OUTPUT" | grep -o 'edSignature="[^"]*"' | cut -d'"' -f2)
+          DMG_LENGTH=$(echo "$SPARKLE_OUTPUT" | grep -o 'length="[^"]*"' | cut -d'"' -f2)
+          echo "ED_SIG=$ED_SIG" >> "$GITHUB_ENV"
+          echo "DMG_LENGTH=$DMG_LENGTH" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          PUB_DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
+          DMG_URL="https://github.com/bsnkhua/vuvuzela/releases/download/${TAG}/Vuvuzela.dmg"
+          # Increment CFBundleVersion from Info.plist for sparkle:version
+          BUNDLE_VER=$(grep -A1 'CFBundleVersion' Resources/Info.plist | tail -1 | tr -d ' <>/string')
+
+          cat > appcast.xml <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+              <channel>
+                  <title>Vuvuzela</title>
+                  <link>https://github.com/bsnkhua/vuvuzela</link>
+                  <description>FIFA World Cup 2026 desktop widget for macOS</description>
+                  <language>en</language>
+                  <item>
+                      <title>Vuvuzela ${VERSION}</title>
+                      <pubDate>${PUB_DATE}</pubDate>
+                      <sparkle:version>${BUNDLE_VER}</sparkle:version>
+                      <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+                      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                      <enclosure
+                          url="${DMG_URL}"
+                          length="${DMG_LENGTH}"
+                          type="application/octet-stream"
+                          sparkle:edSignature="${ED_SIG}"
+                      />
+                  </item>
+              </channel>
+          </rss>
+          EOF
+
+          git config user.email "bsnkhua@gmail.com"
+          git config user.name "Serhii Bezbabnykh"
+          git add appcast.xml
+          git commit -m "chore: update appcast.xml for ${TAG}"
+          git push origin HEAD:main
+
       - name: Create release and upload DMG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

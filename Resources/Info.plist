@@ -31,5 +31,11 @@
     </dict>
     <key>NSUserNotificationAlertStyle</key>
     <string>alert</string>
+    <key>SUPublicEDKey</key>
+    <string>9MskiV7ZponRn+v2sfPJyTq23Z3o6A3xuSz7mSWfSL0=</string>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/bsnkhua/vuvuzela/main/appcast.xml</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
 </dict>
 </plist>

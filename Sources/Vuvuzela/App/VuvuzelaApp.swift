@@ -1,9 +1,8 @@
 import AppKit
 import ServiceManagement
+import Sparkle
 import SwiftUI
 import VuvuzelaCore
-
-private let currentVersion = "1.0.0"
 
 @main
 struct VuvuzelaApp: App {
@@ -14,17 +13,11 @@ struct VuvuzelaApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            if appDelegate.updateAvailable {
-                Button("⬆ Update available") {
-                    NSWorkspace.shared.open(UpdateChecker.releasesPageURL)
-                }
-                Divider()
-            }
-            Button("Vuvuzela v\(currentVersion)") {
-                NSWorkspace.shared.open(UpdateChecker.repoPageURL)
+            Button("Vuvuzela v\(appDelegate.currentVersion)") {
+                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela")!)
             }
             Button("Report an Issue") {
-                NSWorkspace.shared.open(UpdateChecker.issuesPageURL)
+                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela/issues")!)
             }
             Divider()
             Toggle("Lock position", isOn: $positionLocked)
@@ -40,6 +33,10 @@ struct VuvuzelaApp: App {
                 }
             }
             Divider()
+            Button("Check for Updates…") {
+                appDelegate.updaterController.updater.checkForUpdates()
+            }
+            .disabled(!appDelegate.updaterController.updater.canCheckForUpdates)
             Button("Refresh Now") {
                 Task { await appDelegate.store.refresh() }
             }
@@ -50,7 +47,7 @@ struct VuvuzelaApp: App {
             }
             .keyboardShortcut("q")
         } label: {
-            Text(appDelegate.updateAvailable ? "⚽ ⬆" : "⚽")
+            Text("⚽")
                 .font(.system(size: 13))
         }
     }
@@ -98,15 +95,18 @@ final class DesktopWindow: NSWindow {
 }
 
 @MainActor
-@Observable
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: DesktopWindow?
     let store = WorldCupStore()
-    var updateAvailable = false
+    let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
-    private let updateChecker = UpdateChecker()
-    private var lastUpdateCheck: Date?
-    private var updateTimer: Timer?
+    var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -163,20 +163,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         syncWindowSize()
-        checkForUpdates()
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.checkForUpdates() }
-        }
-    }
-
-    private func checkForUpdates() {
-        if let last = lastUpdateCheck, Date().timeIntervalSince(last) < 6 * 3600 { return }
-        lastUpdateCheck = Date()
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            guard let tag = await self.updateChecker.latestReleaseTag() else { return }
-            self.updateAvailable = isNewerVersion(tag, than: currentVersion)
-        }
     }
 
     private func syncWindowSize() {
@@ -199,7 +185,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        updateTimer?.invalidate()
         store.stop()
     }
 }
