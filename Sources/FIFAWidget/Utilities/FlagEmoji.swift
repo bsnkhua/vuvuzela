@@ -1,0 +1,23 @@
+import Foundation
+
+// Maps ESPN team abbreviations → flag emoji
+enum FlagEmoji {
+    private static let map: [String: String] = [
+        "ARG": "🇦🇷", "AUS": "🇦🇺", "AUT": "🇦🇹", "BEL": "🇧🇪",
+        "BIH": "🇧🇦", "BRA": "🇧🇷", "CAN": "🇨🇦", "CIV": "🇨🇮",
+        "COD": "🇨🇩", "COL": "🇨🇴", "CPV": "🇨🇻", "CRO": "🇭🇷",
+        "CUW": "🇨🇼", "CZE": "🇨🇿", "ECU": "🇪🇨", "EGY": "🇪🇬",
+        "ENG": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "ESP": "🇪🇸", "FRA": "🇫🇷", "GER": "🇩🇪",
+        "GHA": "🇬🇭", "HAI": "🇭🇹", "IRN": "🇮🇷", "IRQ": "🇮🇶",
+        "JOR": "🇯🇴", "JPN": "🇯🇵", "KOR": "🇰🇷", "KSA": "🇸🇦",
+        "MAR": "🇲🇦", "MEX": "🇲🇽", "NED": "🇳🇱", "NOR": "🇳🇴",
+        "NZL": "🇳🇿", "PAN": "🇵🇦", "PAR": "🇵🇾", "POR": "🇵🇹",
+        "QAT": "🇶🇦", "RSA": "🇿🇦", "SCO": "🏴󠁧󠁢󠁳󠁣󠁴󠁿", "SEN": "🇸🇳",
+        "SUI": "🇨🇭", "SWE": "🇸🇪", "TUN": "🇹🇳", "TUR": "🇹🇷",
+        "URU": "🇺🇾", "USA": "🇺🇸", "UZB": "🇺🇿", "ALG": "🇩🇿",
+    ]
+
+    static func flag(for abbreviation: String) -> String {
+        map[abbreviation] ?? "🏳️"
+    }
+}
