@@ -9,6 +9,8 @@ jobs:
     runs-on: macos-15
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
 
@@ -68,9 +70,9 @@ jobs:
       - name: Staple notarization ticket
         run: xcrun stapler staple dist/Vuvuzela.dmg
 
-      - name: Upload DMG to GitHub Release
+      - name: Create release and upload DMG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          gh release upload "$TAG" dist/Vuvuzela.dmg --clobber
+          gh release create "$TAG" --title "$TAG" --generate-notes dist/Vuvuzela.dmg
