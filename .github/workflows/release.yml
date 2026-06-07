@@ -74,17 +74,16 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          SPARKLE_VERSION=$(python3 -c "import json; p=json.load(open('Package.resolved')); print(next(x['state']['version'] for x in p['pins'] if x['identity']=='sparkle'))")
-          curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
-            -o /tmp/sparkle.tar.xz
-          tar -xf /tmp/sparkle.tar.xz -C /tmp bin/sign_update
-          chmod +x /tmp/bin/sign_update
-          SPARKLE_OUTPUT=$(SPARKLE_PRIVATE_KEY="$SPARKLE_PRIVATE_KEY" /tmp/bin/sign_update dist/Vuvuzela.dmg)
-          echo "$SPARKLE_OUTPUT"
-          ED_SIG=$(echo "$SPARKLE_OUTPUT" | grep -o 'edSignature="[^"]*"' | cut -d'"' -f2)
-          DMG_LENGTH=$(echo "$SPARKLE_OUTPUT" | grep -o 'length="[^"]*"' | cut -d'"' -f2)
-          echo "ED_SIG=$ED_SIG" >> "$GITHUB_ENV"
-          echo "DMG_LENGTH=$DMG_LENGTH" >> "$GITHUB_ENV"
+          pip3 install cryptography --quiet
+          python3 << 'PYEOF' >> "$GITHUB_ENV"
+          import base64, os
+          from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+          key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(os.environ['SPARKLE_PRIVATE_KEY']))
+          data = open('dist/Vuvuzela.dmg', 'rb').read()
+          sig = base64.b64encode(key.sign(data)).decode()
+          print(f'ED_SIG={sig}')
+          print(f'DMG_LENGTH={len(data)}')
+          PYEOF
 
       - name: Update appcast.xml
         env:
