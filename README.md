@@ -71,7 +71,7 @@ When a window is hidden behind other apps or the display is off, polling pauses 
 
 ### Automatic updates
 
-Vuvuzela checks for new releases every 6 hours via Sparkle. When an update is available, a banner appears in the menu bar — no action required to stay current.
+Vuvuzela checks for new releases every 24 hours via Sparkle. When an update is available, a banner appears in the menu bar — no action required to stay current.
 
 ## Requirements
 
