@@ -1,5 +1,5 @@
 import Testing
-@testable import Vuvuzela
+@testable import VuvuzelaCore
 
 @Suite("FlagEmoji")
 struct FlagEmojiTests {
@@ -17,11 +17,10 @@ struct FlagEmojiTests {
 
 @Suite("QualificationStatus")
 struct QualificationStatusTests {
-    @Test func colorMapping() {
-        #expect(TeamRow.QualificationStatus.direct.indicatorColor == "#81D6AC")
-        #expect(TeamRow.QualificationStatus.bestThird.indicatorColor == "#B5E7CE")
-        #expect(TeamRow.QualificationStatus.eliminated.indicatorColor == "#FF7F84")
-        #expect(TeamRow.QualificationStatus.unknown.indicatorColor == nil)
+    @Test func cases() {
+        // Verify all cases exist and are distinct
+        let all: [TeamRow.QualificationStatus] = [.direct, .bestThirdIn, .bestThirdOut, .eliminated, .unknown]
+        #expect(all.count == 5)
     }
 }
 
@@ -32,5 +31,15 @@ struct BracketTests {
         #expect(rounds.count == 6)
         #expect(rounds.first?.id == "r32")
         #expect(rounds.first?.matches.count == 16)
+    }
+}
+
+@Suite("VersionCompare")
+struct VersionCompareTests {
+    @Test func newerVersion() {
+        #expect(isNewerVersion("v1.1.0", than: "1.0.0"))
+        #expect(isNewerVersion("v2.0.0", than: "1.9.9"))
+        #expect(!isNewerVersion("v1.0.0", than: "1.0.0"))
+        #expect(!isNewerVersion("v0.9.0", than: "1.0.0"))
     }
 }

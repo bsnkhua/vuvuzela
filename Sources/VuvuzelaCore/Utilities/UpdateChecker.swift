@@ -1,15 +1,17 @@
 import Foundation
 
-struct UpdateChecker {
-    static let releasesPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela/releases")!
-    static let repoPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela")!
-    static let issuesPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela/issues")!
+public struct UpdateChecker {
+    public static let releasesPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela/releases")!
+    public static let repoPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela")!
+    public static let issuesPageURL = URL(string: "https://github.com/bsnkhua/vuvuzela/issues")!
 
     private static let latestReleaseAPI =
         URL(string: "https://api.github.com/repos/bsnkhua/vuvuzela/releases/latest")!
 
+    public init() {}
+
     /// Latest release tag (e.g. "v1.0.0") or nil on any failure.
-    func latestReleaseTag() async -> String? {
+    public func latestReleaseTag() async -> String? {
         var request = URLRequest(url: Self.latestReleaseAPI)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.timeoutInterval = 10
@@ -29,7 +31,7 @@ struct UpdateChecker {
 }
 
 /// Returns true if `remote` (e.g. "v1.2.0") is newer than `current` (e.g. "1.0.0").
-func isNewerVersion(_ remote: String, than current: String) -> Bool {
+public func isNewerVersion(_ remote: String, than current: String) -> Bool {
     func parts(_ s: String) -> [Int] {
         s.trimmingCharacters(in: .init(charactersIn: "v"))
             .split(separator: ".").compactMap { Int($0) }

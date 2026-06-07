@@ -3,7 +3,7 @@ import Observation
 
 @MainActor
 @Observable
-final class WorldCupStore {
+public final class WorldCupStore {
     // Published data
     private(set) var groups: [GroupStanding] = []
     private(set) var liveMatches: [Match] = []
@@ -31,30 +31,30 @@ final class WorldCupStore {
         return Calendar.current.date(from: c) ?? Date()
     }()
 
-    init() {}
+    public init() {}
 
-    func start() {
+    public func start() {
         stop()
         goalNotifier.requestAuthorization()
         Task { await refresh() }
         scheduleNextTick()
     }
 
-    func stop() {
+    public func stop() {
         timer?.invalidate()
         timer = nil
     }
 
-    func suspend() { isSuspended = true }
+    public func suspend() { isSuspended = true }
 
-    func resume() {
+    public func resume() {
         guard isSuspended else { return }
         isSuspended = false
         Task { await refresh() }
         scheduleNextTick()
     }
 
-    func toggleFavorite(_ abbreviation: String) {
+    public func toggleFavorite(_ abbreviation: String) {
         if favoriteTeams.contains(abbreviation) {
             favoriteTeams.remove(abbreviation)
         } else {
@@ -96,7 +96,7 @@ final class WorldCupStore {
         return 3600     // otherwise 1 hour
     }
 
-    func refresh() async {
+    public func refresh() async {
         guard !isLoading else { return }
         isLoading = true
         error = nil

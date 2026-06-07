@@ -1,20 +1,42 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-// Tests require splitting into library + executable (like mole-widget).
-// Will be added in a follow-up PR.
 let package = Package(
     name: "Vuvuzela",
     platforms: [.macOS(.v14)],
     products: [
+        .library(name: "VuvuzelaCore", targets: ["VuvuzelaCore"]),
         .executable(name: "Vuvuzela", targets: ["Vuvuzela"]),
     ],
     targets: [
+        .target(
+            name: "VuvuzelaCore",
+            path: "Sources/VuvuzelaCore",
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
         .executableTarget(
             name: "Vuvuzela",
+            dependencies: ["VuvuzelaCore"],
             path: "Sources/Vuvuzela",
-            resources: [],
             swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .testTarget(
+            name: "VuvuzelaTests",
+            dependencies: ["VuvuzelaCore"],
+            path: "Tests/VuvuzelaTests",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+                .unsafeFlags(["-F", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks"]),
+            ],
+            linkerSettings: [
+                .unsafeFlags([
+                    "-F", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "/Library/Developer/CommandLineTools/Library/Developer/Frameworks",
+                    "-Xlinker", "-rpath",
+                    "-Xlinker", "/Library/Developer/CommandLineTools/Library/Developer/usr/lib",
+                ])
+            ]
         ),
     ]
 )

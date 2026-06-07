@@ -1,6 +1,7 @@
 import AppKit
 import ServiceManagement
 import SwiftUI
+import VuvuzelaCore
 
 private let currentVersion = "1.0.0"
 

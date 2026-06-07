@@ -7,16 +7,18 @@ enum WidgetTab: String, CaseIterable {
     case bracket = "Bracket"
 }
 
-struct ContentView: View {
+public struct ContentView: View {
     @State private var activeTab: WidgetTab = .groups
     let store: WorldCupStore
+
+    public init(store: WorldCupStore) { self.store = store }
 
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
     @AppStorage(WidgetSettings.widgetWidthKey)    private var widgetWidth    = WidgetSettings.defaultWidth
     @AppStorage(WidgetSettings.backgroundOpacityKey) private var backgroundOpacity = WidgetSettings.defaultOpacity
     @State private var dragStartWidth: Double?
 
-    var body: some View {
+    public var body: some View {
         VStack(spacing: 0) {
             HeaderView(store: store, activeTab: $activeTab)
             Divider().background(Theme.cardBorder)
