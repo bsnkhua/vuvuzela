@@ -3,8 +3,9 @@
 [![CI](https://github.com/bsnkhua/vuvuzela/actions/workflows/ci.yml/badge.svg)](https://github.com/bsnkhua/vuvuzela/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/bsnkhua/vuvuzela)](https://github.com/bsnkhua/vuvuzela/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/bsnkhua)
 
-**Vuvuzela** is a lightweight macOS desktop widget for FIFA World Cup 2026 — live group standings, match schedule, and knockout bracket right on your desktop. A borderless window living at desktop level, above the wallpaper and below your app windows.
+**Vuvuzela** is a lightweight macOS desktop widget for FIFA World Cup 2026. It sits on your desktop as a borderless window — above the wallpaper, below your app windows — showing live standings, the full match schedule, and the knockout bracket without ever leaving your workspace.
 
 <img src="assets/screenshot-groups.png" alt="Groups view" width="100%">
 
@@ -17,15 +18,60 @@
 
 ## Features
 
-- **Groups** — live standings for all 12 groups with flags, points, goal difference
-- **Matches** — full schedule grouped by day with team flags and kickoff times in your local timezone
-- **Bracket** — knockout stage tree from Round of 32 to the Final
-- Switch views with the Groups / Matches / Bracket buttons in the header
-- Drag it anywhere on the desktop; position is remembered across launches
-- 🔒 Lock icon pins the position
-- Background opacity control (100 / 92 / 85 / 70 %)
-- Launch at login toggle; no Dock icon
-- Checks for updates every 6 hours and shows a banner in the menu bar when one is available
+### Groups
+
+All 12 groups at a glance — rank, team flag, P / W / D / L / GD / Pts. A color bar on the left edge of each row shows the team's current status: **green** for direct qualification (top 2), **teal** for best-third projection. The best-third calculation uses FIFA tiebreakers (points → goal difference → goals scored) across all groups, so you always see which eight rank-3 teams are currently advancing.
+
+During live group-stage matches, standings update in real time — in-progress scores are projected onto the table, positions shift as goals are scored.
+
+### Matches
+
+Matches are split into three sections:
+
+- **LIVE** — in-progress matches at the top with a pulsing dot, live minute, and current score
+- **Upcoming** — grouped by day with TODAY / TOMORROW labels; kickoff times are in your local timezone
+- **Results** — today's finished matches with the final score
+
+Each row shows team flags, abbreviations, score (or kickoff time for scheduled matches), and the group or round tag. A halftime indicator (HT) appears during the break.
+
+### Bracket
+
+The full knockout tree from Round of 32 through to the Final, updated as results come in.
+
+### Favourites & notifications
+
+Tap any team in the Groups or Matches view to mark it as a favourite. Favourite teams are highlighted in yellow throughout the widget. Groups that contain a favourite show a ★ in their header.
+
+Once a team is marked as favourite, Vuvuzela sends macOS system notifications:
+
+- **Goal** — an alert with the scorer's flag and the live score, with a custom goal sound
+- **Kick-off** — a notification when a match involving your team starts
+
+Notifications only fire for teams you've explicitly starred.
+
+### Widget controls
+
+- **Drag** the widget anywhere on the desktop; position is remembered across launches
+- **Resize** by dragging the right edge (720 – 1200 px wide)
+- **Lock** icon in the header pins the position and disables resize
+- **Opacity** — four background transparency levels: 100 / 92 / 85 / 70 %
+- **Launch at login** toggle in the menu bar; no Dock icon, no interruptions
+
+### Data refresh
+
+The widget polls live automatically:
+
+| Situation | Interval |
+|-----------|----------|
+| Match in progress | every 60 s |
+| Next match starts in < 1 hour | every 5 min |
+| No match imminent | every hour |
+
+When a window is hidden behind other apps or the display is off, polling pauses and resumes immediately when the widget becomes visible again.
+
+### Automatic updates
+
+Vuvuzela checks for new releases every 6 hours via Sparkle. When an update is available, a banner appears in the menu bar — no action required to stay current.
 
 ## Requirements
 
@@ -48,8 +94,6 @@ brew install bsnkhua/tap/vuvuzela
 
 The formula builds the widget from source on your machine (~30 s). Because the app is built locally, Gatekeeper has no objections to the unsigned bundle.
 
-Quit any time from the menu bar ⚽ icon → **Quit Vuvuzela**.
-
 ### From source
 
 ```bash
@@ -59,15 +103,17 @@ make app
 open "dist/Vuvuzela.app"   # or move it to /Applications
 ```
 
+Quit any time from the menu bar icon → **Quit Vuvuzela**.
+
 ## Update
+
+The widget updates itself automatically. To update the Homebrew installation manually:
 
 ```bash
 brew update && brew upgrade vuvuzela && (pkill -f "Vuvuzela.app"; sleep 1; open -a Vuvuzela)
 ```
 
 Or download the latest DMG from the [Releases page](https://github.com/bsnkhua/vuvuzela/releases).
-
-The widget also checks GitHub for new releases every 6 hours. When one is available, a banner appears in the menu bar.
 
 ## Uninstall
 
