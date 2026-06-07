@@ -74,7 +74,7 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          SPARKLE_VERSION=$(grep -A4 '"sparkle"' Package.resolved | grep '"version"' | tr -d ' "version:')
+          SPARKLE_VERSION=$(python3 -c "import json; p=json.load(open('Package.resolved')); print(next(x['state']['version'] for x in p['pins'] if x['identity']=='sparkle'))")
           curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
             -o /tmp/sparkle.tar.xz
           tar -xf /tmp/sparkle.tar.xz -C /tmp bin/sign_update
