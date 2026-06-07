@@ -43,12 +43,13 @@ jobs:
           install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Vuvuzela"
           cp Resources/Info.plist "$APP/Contents/Info.plist"
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
-          codesign --force --options runtime \
-            --sign "Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)" \
-            "$APP/Contents/Frameworks/Sparkle.framework"
-          codesign --force --options runtime \
-            --sign "Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)" \
-            "$APP"
+          SIGN="Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)"
+          SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+          # Sign XPC services first, then framework, then app
+          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/XPCServices/Downloader.xpc"
+          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/XPCServices/Installer.xpc"
+          codesign --force --options runtime --sign "$SIGN" "$APP/Contents/Frameworks/Sparkle.framework"
+          codesign --force --options runtime --sign "$SIGN" "$APP"
 
       - name: Create DMG
         run: |
@@ -67,11 +68,13 @@ jobs:
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          xcrun notarytool submit dist/Vuvuzela.dmg \
+          OUTPUT=$(xcrun notarytool submit dist/Vuvuzela.dmg \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --wait 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "status: Accepted" || { echo "Notarization rejected!"; exit 1; }
 
       - name: Staple notarization ticket
         run: xcrun stapler staple dist/Vuvuzela.dmg
