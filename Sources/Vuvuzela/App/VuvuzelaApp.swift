@@ -2,6 +2,8 @@ import AppKit
 import ServiceManagement
 import SwiftUI
 
+private let currentVersion = "1.0.0"
+
 @main
 struct VuvuzelaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -9,26 +11,19 @@ struct VuvuzelaApp: App {
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
     @AppStorage(WidgetSettings.backgroundOpacityKey) private var backgroundOpacity = WidgetSettings.defaultOpacity
 
-    private static let menuBarIcon: NSImage = {
-        let image = NSImage(size: NSSize(width: 18, height: 16), flipped: false) { _ in
-            NSColor.black.setFill()
-            let text = "⚽" as NSString
-            text.draw(at: NSPoint(x: 1, y: 1), withAttributes: [
-                .font: NSFont.systemFont(ofSize: 13),
-            ])
-            return true
-        }
-        image.isTemplate = false
-        return image
-    }()
-
     var body: some Scene {
         MenuBarExtra {
-            Button("Vuvuzela v1.0.0") {
-                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela")!)
+            if appDelegate.updateAvailable {
+                Button("⬆ Update available") {
+                    NSWorkspace.shared.open(UpdateChecker.releasesPageURL)
+                }
+                Divider()
+            }
+            Button("Vuvuzela v\(currentVersion)") {
+                NSWorkspace.shared.open(UpdateChecker.repoPageURL)
             }
             Button("Report an Issue") {
-                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela/issues")!)
+                NSWorkspace.shared.open(UpdateChecker.issuesPageURL)
             }
             Divider()
             Toggle("Lock position", isOn: $positionLocked)
@@ -54,7 +49,7 @@ struct VuvuzelaApp: App {
             }
             .keyboardShortcut("q")
         } label: {
-            Text("⚽")
+            Text(appDelegate.updateAvailable ? "⚽ ⬆" : "⚽")
                 .font(.system(size: 13))
         }
     }
@@ -102,9 +97,15 @@ final class DesktopWindow: NSWindow {
 }
 
 @MainActor
+@Observable
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: DesktopWindow?
     let store = WorldCupStore()
+    var updateAvailable = false
+
+    private let updateChecker = UpdateChecker()
+    private var lastUpdateCheck: Date?
+    private var updateTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -161,6 +162,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         syncWindowSize()
+        checkForUpdates()
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.checkForUpdates() }
+        }
+    }
+
+    private func checkForUpdates() {
+        if let last = lastUpdateCheck, Date().timeIntervalSince(last) < 6 * 3600 { return }
+        lastUpdateCheck = Date()
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            guard let tag = await self.updateChecker.latestReleaseTag() else { return }
+            self.updateAvailable = isNewerVersion(tag, than: currentVersion)
+        }
     }
 
     private func syncWindowSize() {
@@ -183,6 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        updateTimer?.invalidate()
         store.stop()
     }
 }
