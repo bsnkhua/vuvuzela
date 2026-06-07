@@ -43,6 +43,7 @@ jobs:
           install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Vuvuzela"
           cp Resources/Info.plist "$APP/Contents/Info.plist"
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+          cp Resources/vuvuzela-menubar.png "$APP/Contents/Resources/vuvuzela-menubar.png"
           SIGN="Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)"
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
           # Sign all Sparkle internals from deepest to outermost

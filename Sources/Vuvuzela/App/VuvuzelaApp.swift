@@ -47,11 +47,12 @@ struct VuvuzelaApp: App {
             }
             .keyboardShortcut("q")
         } label: {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .interpolation(.high)
-                .scaledToFit()
-                .frame(width: 16, height: 16)
+            Image(nsImage: {
+                let img = Bundle.main.image(forResource: "vuvuzela-menubar") ?? NSImage()
+                img.size = NSSize(width: 18, height: 18)
+                img.isTemplate = true
+                return img
+            }())
         }
     }
 }

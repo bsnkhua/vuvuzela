@@ -28,6 +28,7 @@ app:
 	install_name_tool -add_rpath "@executable_path/../Frameworks" "$(DIST)/Contents/MacOS/Vuvuzela"
 	cp Resources/Info.plist "$(DIST)/Contents/Info.plist"
 	cp Resources/AppIcon.icns "$(DIST)/Contents/Resources/AppIcon.icns"
+	cp Resources/vuvuzela-menubar.png "$(DIST)/Contents/Resources/vuvuzela-menubar.png"
 	codesign --force --sign - "$(DIST)/Contents/Frameworks/Sparkle.framework"
 	codesign --force --sign - "$(DIST)"
 	@echo "Done: $(DIST)"
