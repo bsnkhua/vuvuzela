@@ -97,11 +97,25 @@ struct ESPNCompTeam: Decodable {
 
 // MARK: - Mapping
 
-private let iso8601Formatter: ISO8601DateFormatter = {
-    let f = ISO8601DateFormatter()
-    f.formatOptions = [.withInternetDateTime]
+// ESPN uses "2026-06-11T19:00Z" (no seconds). ISO8601DateFormatter requires seconds,
+// so we use DateFormatter with explicit formats instead.
+private let espnDateFull: DateFormatter = {
+    let f = DateFormatter()
+    f.locale = Locale(identifier: "en_US_POSIX")
+    f.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
     return f
 }()
+
+private let espnDateShort: DateFormatter = {
+    let f = DateFormatter()
+    f.locale = Locale(identifier: "en_US_POSIX")
+    f.dateFormat = "yyyy-MM-dd'T'HH:mmZZZZZ"
+    return f
+}()
+
+private func parseESPNDate(_ string: String) -> Date {
+    espnDateFull.date(from: string) ?? espnDateShort.date(from: string) ?? Date()
+}
 
 extension ESPNEvent {
     func toMatch() -> Match? {
@@ -111,7 +125,7 @@ extension ESPNEvent {
         let home = comps.first { $0.homeAway == "home" } ?? comps[0]
         let away = comps.first { $0.homeAway == "away" } ?? comps[1]
 
-        let kickoff = iso8601Formatter.date(from: date) ?? Date()
+        let kickoff = parseESPNDate(date)
 
         let statusName = comp.status?.type?.name ?? ""
         let matchStatus: MatchStatus

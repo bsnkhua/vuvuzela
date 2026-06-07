@@ -15,13 +15,16 @@ enum Theme {
     static let textSecondary = Color(red: 0.53, green: 0.57, blue: 0.63)
     static let textDim = Color(white: 1, opacity: 0.35)
 
-    // Qualification indicators (from ESPN API note colors)
-    static let qualifyGreen = Color(red: 0.51, green: 0.84, blue: 0.67)    // #81D6AC – direct
-    static let qualifyLightGreen = Color(red: 0.71, green: 0.91, blue: 0.81) // #B5E7CE – best 3rd
-    static let eliminated = Color(red: 1.0, green: 0.50, blue: 0.52)         // #FF7F84
+    // Qualification indicators
+    static let qualifyGreen = Color(red: 0.51, green: 0.84, blue: 0.67)    // #81D6AC – direct (top 2)
+    static let bestThird = Color(red: 1.0, green: 0.78, blue: 0.25)        // amber – best 8 third-place
+    static let eliminated = Color(red: 1.0, green: 0.50, blue: 0.52)       // #FF7F84
 
     // Live match pulse
     static let live = Color(red: 1.0, green: 0.27, blue: 0.27)
+
+    // Warning / lock
+    static let warning = Color(red: 1.0, green: 0.62, blue: 0.04)
 
     // Tab bar
     static let tabActive = Color.white

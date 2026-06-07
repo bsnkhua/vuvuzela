@@ -6,3 +6,4 @@ dist/
 xcuserdata/
 *.xcworkspace
 .swiftpm/
+.playwright-mcp/

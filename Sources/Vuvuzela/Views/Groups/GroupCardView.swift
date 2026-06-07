@@ -9,13 +9,13 @@ struct GroupCardView: View {
             // Header
             HStack {
                 Text(group.name.uppercased())
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(Theme.textSecondary)
                     .tracking(0.5)
                 Spacer()
                 if group.teams.contains(where: { $0.isFavorite }) {
                     Text("★")
-                        .font(.system(size: 8))
+                        .font(.system(size: 9))
                         .foregroundStyle(Color.yellow)
                 }
             }
@@ -42,7 +42,7 @@ struct GroupCardView: View {
                 Text("Pts")
                     .frame(width: 24, alignment: .center)
             }
-            .font(.system(size: 8, weight: .medium))
+            .font(.system(size: 9, weight: .medium))
             .foregroundStyle(Theme.textDim)
             .padding(.horizontal, 7)
             .padding(.bottom, 3)
@@ -82,16 +82,16 @@ private struct TeamRowView: View {
             HStack(spacing: 0) {
                 // Rank
                 Text("\(team.rank)")
-                    .font(.system(size: 9))
+                    .font(.system(size: 10))
                     .foregroundStyle(team.rank <= 2 ? Theme.textPrimary : Theme.textSecondary)
                     .frame(width: 14, alignment: .center)
 
                 // Flag + abbreviation
                 HStack(spacing: 3) {
                     Text(team.flag)
-                        .font(.system(size: 10))
+                        .font(.system(size: 11))
                     Text(team.abbreviation)
-                        .font(.system(size: 9, weight: team.isFavorite ? .semibold : .regular))
+                        .font(.system(size: 10, weight: team.isFavorite ? .semibold : .regular))
                         .foregroundStyle(team.isFavorite ? Color.yellow : Theme.textPrimary)
                 }
                 .frame(width: 58, alignment: .leading)
@@ -106,13 +106,13 @@ private struct TeamRowView: View {
 
                 // GD with sign
                 Text(team.goalDiff >= 0 ? "+\(team.goalDiff)" : "\(team.goalDiff)")
-                    .font(.system(size: 9))
+                    .font(.system(size: 10))
                     .foregroundStyle(team.goalDiff > 0 ? Theme.qualifyGreen : (team.goalDiff < 0 ? Theme.eliminated : Theme.textSecondary))
                     .frame(width: 24, alignment: .center)
 
                 // Points (bold)
                 Text("\(team.points)")
-                    .font(.system(size: 9, weight: .semibold))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .frame(width: 24, alignment: .center)
             }
@@ -131,18 +131,16 @@ private struct TeamRowView: View {
         switch team.qualificationStatus {
         case .direct:
             Theme.qualifyGreen
-        case .bestThird:
-            Theme.qualifyLightGreen
-        case .eliminated:
-            Color.clear
-        case .unknown:
+        case .bestThirdIn:
+            Theme.bestThird
+        case .bestThirdOut, .eliminated, .unknown:
             Color.clear
         }
     }
 
     private func statCell(_ value: Int) -> some View {
         Text("\(value)")
-            .font(.system(size: 9))
+            .font(.system(size: 10))
             .foregroundStyle(Theme.textSecondary)
             .frame(width: 20, alignment: .center)
     }

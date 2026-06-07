@@ -25,19 +25,11 @@ struct TeamRow: Identifiable, Sendable {
     var isFavorite: Bool = false
 
     enum QualificationStatus: Sendable {
-        case direct    // top 2 → guaranteed R32
-        case bestThird // rank 3 → top 8 3rd-place
+        case direct        // top 2 → guaranteed R32
+        case bestThirdIn   // rank 3, currently in top-8 third-place
+        case bestThirdOut  // rank 3, currently outside top-8
         case eliminated
         case unknown
-
-        var indicatorColor: String? {
-            switch self {
-            case .direct: return "#81D6AC"
-            case .bestThird: return "#B5E7CE"
-            case .eliminated: return "#FF7F84"
-            case .unknown: return nil
-            }
-        }
     }
 
     var flag: String { FlagEmoji.flag(for: abbreviation) }
@@ -106,7 +98,7 @@ extension ESPNEntry {
         let qualStatus: TeamRow.QualificationStatus
         switch note?.color {
         case "#81D6AC": qualStatus = .direct
-        case "#B5E7CE": qualStatus = .bestThird
+        case "#B5E7CE": qualStatus = .bestThirdIn  // WorldCupStore will recalculate best-8
         case "#FF7F84": qualStatus = .eliminated
         default:        qualStatus = .unknown
         }

@@ -7,6 +7,8 @@ final class GoalNotifier {
     private var notificationsAuthorized = false
 
     func requestAuthorization() {
+        // UNUserNotificationCenter requires a bundled app; skip in bare-binary dev runs
+        guard Bundle.main.bundleIdentifier != nil else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
             Task { @MainActor in self.notificationsAuthorized = granted }
         }
@@ -38,7 +40,7 @@ final class GoalNotifier {
     }
 
     func notifyMatchStart(match: Match, favoriteTeams: Set<String>) {
-        guard notificationsAuthorized else { return }
+        guard notificationsAuthorized, Bundle.main.bundleIdentifier != nil else { return }
         let home = match.homeTeam.abbreviation
         let away = match.awayTeam.abbreviation
         guard favoriteTeams.contains(home) || favoriteTeams.contains(away) else { return }
@@ -52,6 +54,7 @@ final class GoalNotifier {
     }
 
     private func sendGoalNotification(scorer: String, match: Match) {
+        guard Bundle.main.bundleIdentifier != nil else { return }
         let content = UNMutableNotificationContent()
         content.title = "⚽ GOAL! \(FlagEmoji.flag(for: scorer)) \(scorer)"
         content.body = "\(match.homeTeam.flag) \(match.homeTeam.abbreviation) \(match.homeTeam.score) – \(match.awayTeam.score) \(match.awayTeam.abbreviation) \(match.awayTeam.flag)"

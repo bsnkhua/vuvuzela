@@ -3,7 +3,7 @@ import ServiceManagement
 import SwiftUI
 
 @main
-struct FIFAWidgetApp: App {
+struct VuvuzelaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
@@ -24,11 +24,11 @@ struct FIFAWidgetApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            Button("FIFA Widget v1.0.0") {
-                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/fifa-world-cup-2026")!)
+            Button("Vuvuzela v1.0.0") {
+                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela")!)
             }
             Button("Report an Issue") {
-                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/fifa-world-cup-2026/issues")!)
+                NSWorkspace.shared.open(URL(string: "https://github.com/bsnkhua/vuvuzela/issues")!)
             }
             Divider()
             Toggle("Lock position", isOn: $positionLocked)
@@ -49,7 +49,7 @@ struct FIFAWidgetApp: App {
             }
             .keyboardShortcut("r")
             Divider()
-            Button("Quit FIFA Widget") {
+            Button("Quit Vuvuzela") {
                 NSApplication.shared.terminate(nil)
             }
             .keyboardShortcut("q")
@@ -136,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         window.center()
-        window.setFrameAutosaveName("FIFAWidgetWindow")
+        window.setFrameAutosaveName("VuvuzelaWindow")
         window.orderFrontRegardless()
         self.window = window
 

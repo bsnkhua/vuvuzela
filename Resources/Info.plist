@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.bsnkhua.fifa-widget</string>
+    <string>com.bsnkhua.vuvuzela</string>
     <key>CFBundleName</key>
-    <string>FIFA Widget</string>
+    <string>Vuvuzela</string>
     <key>CFBundleDisplayName</key>
-    <string>FIFA Widget</string>
+    <string>Vuvuzela</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
@@ -15,7 +15,7 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>FIFAWidget</string>
+    <string>Vuvuzela</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>

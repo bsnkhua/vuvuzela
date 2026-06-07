@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 enum WidgetTab: String, CaseIterable {
@@ -10,31 +11,63 @@ struct ContentView: View {
     @State private var activeTab: WidgetTab = .groups
     let store: WorldCupStore
 
+    @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
+    @AppStorage(WidgetSettings.widgetWidthKey)    private var widgetWidth    = WidgetSettings.defaultWidth
+    @AppStorage(WidgetSettings.backgroundOpacityKey) private var backgroundOpacity = WidgetSettings.defaultOpacity
+    @State private var dragStartWidth: Double?
+
     var body: some View {
         VStack(spacing: 0) {
             HeaderView(store: store, activeTab: $activeTab)
             Divider().background(Theme.cardBorder)
 
-            switch activeTab {
-            case .groups:
-                GroupsView(store: store)
-            case .matches:
-                MatchesView(store: store)
-            case .bracket:
-                BracketView(store: store)
+            Group {
+                switch activeTab {
+                case .groups:
+                    ScrollView { GroupsView(store: store) }
+                case .matches:
+                    MatchesView(store: store)
+                case .bracket:
+                    BracketView(store: store)
+                }
             }
+            .frame(height: 562)
         }
-        .background(Theme.background.opacity(
-            UserDefaults.standard.object(forKey: WidgetSettings.backgroundOpacityKey) as? Double
-                ?? WidgetSettings.defaultOpacity
-        ))
+        .background(Theme.background.opacity(WidgetSettings.clampOpacity(backgroundOpacity)))
         .cornerRadius(10)
+        .overlay(alignment: .trailing) {
+            resizeHandle
+        }
+    }
+
+    // Invisible 10-pt strip on the right edge — drag to resize, disabled when locked
+    private var resizeHandle: some View {
+        Color.clear
+            .frame(width: 10)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                guard !positionLocked else { return }
+                if inside { NSCursor.resizeLeftRight.push() }
+                else { NSCursor.pop() }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        guard !positionLocked else { return }
+                        let start = dragStartWidth ?? widgetWidth
+                        dragStartWidth = start
+                        widgetWidth = WidgetSettings.clampWidth(start + value.translation.width)
+                    }
+                    .onEnded { _ in dragStartWidth = nil }
+            )
     }
 }
 
 private struct HeaderView: View {
     let store: WorldCupStore
     @Binding var activeTab: WidgetTab
+    @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -58,7 +91,7 @@ private struct HeaderView: View {
             .padding(3)
             .background(Color(white: 1, opacity: 0.06), in: Capsule())
 
-            // Status indicators
+            // Status indicators + lock
             HStack(spacing: 6) {
                 if !store.liveMatches.isEmpty {
                     LiveIndicator()
@@ -67,11 +100,13 @@ private struct HeaderView: View {
                     ProgressView()
                         .scaleEffect(0.5)
                         .frame(width: 14, height: 14)
-                } else if let updated = store.lastUpdated {
+                } else if let updated = store.lastUpdated, !store.liveMatches.isEmpty {
                     Text(updated, style: .relative)
                         .font(.system(size: 9))
                         .foregroundStyle(Theme.textDim)
+                        .frame(width: 36, alignment: .trailing)
                 }
+                lockButton
             }
         }
         .padding(.horizontal, 12)
@@ -90,6 +125,22 @@ private struct HeaderView: View {
                 .background(isActive ? Color(white: 1, opacity: 0.12) : Color.clear, in: Capsule())
         }
         .buttonStyle(.plain)
+    }
+
+    private var lockButton: some View {
+        Button {
+            positionLocked.toggle()
+        } label: {
+            Image(systemName: positionLocked ? "lock.fill" : "lock.open")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(positionLocked ? Theme.warning : Theme.textDim)
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(positionLocked
+            ? "Position locked — click to unlock"
+            : "Click to lock the widget position")
     }
 }
 

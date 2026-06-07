@@ -1,5 +1,5 @@
 import Testing
-@testable import FIFAWidget
+@testable import Vuvuzela
 
 @Suite("FlagEmoji")
 struct FlagEmojiTests {
