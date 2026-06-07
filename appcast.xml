@@ -6,16 +6,16 @@
         <description>FIFA World Cup 2026 desktop widget for macOS</description>
         <language>en</language>
         <item>
-            <title>Vuvuzela 1.0.0</title>
-            <pubDate>Sat, 07 Jun 2026 20:03:20 +0000</pubDate>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <title>Vuvuzela 1.0.1</title>
+            <pubDate>Sun, 07 Jun 2026 20:55:32 +0000</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/bsnkhua/vuvuzela/releases/download/v1.0.0/Vuvuzela.dmg"
-                length="851936"
+                url="https://github.com/bsnkhua/vuvuzela/releases/download/v1.0.1/Vuvuzela.dmg"
+                length="857245"
                 type="application/octet-stream"
-                sparkle:edSignature="uU+N151KYY9VsvS9HpQrT3Pv6sgeUDAfFVa9AOMQmDlan0vrE0rfxO5VAxYPtsHvGdzrNfHY0kTMliRr3ThxCw=="
+                sparkle:edSignature="Y9DVmQB+miDlJ7cpk3zB1roqE1lL/V2mwrIN1f48eEU4KIMgRiuiq6aa94EImJCYNyOClSOVM8WYx/NodbbRDQ=="
             />
         </item>
     </channel>
