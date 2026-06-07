@@ -47,8 +47,11 @@ struct VuvuzelaApp: App {
             }
             .keyboardShortcut("q")
         } label: {
-            Text("⚽")
-                .font(.system(size: 13))
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 16, height: 16)
         }
     }
 }
