@@ -74,9 +74,12 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          brew install --cask sparkle 2>/dev/null || true
-          SIGN_UPDATE=$(find /opt/homebrew/Caskroom/sparkle -name sign_update 2>/dev/null | head -1)
-          SPARKLE_OUTPUT=$(SPARKLE_PRIVATE_KEY="$SPARKLE_PRIVATE_KEY" "$SIGN_UPDATE" dist/Vuvuzela.dmg)
+          SPARKLE_VERSION=$(grep -A4 '"sparkle"' Package.resolved | grep '"version"' | tr -d ' "version:')
+          curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+            -o /tmp/sparkle.tar.xz
+          tar -xf /tmp/sparkle.tar.xz -C /tmp bin/sign_update
+          chmod +x /tmp/bin/sign_update
+          SPARKLE_OUTPUT=$(SPARKLE_PRIVATE_KEY="$SPARKLE_PRIVATE_KEY" /tmp/bin/sign_update dist/Vuvuzela.dmg)
           echo "$SPARKLE_OUTPUT"
           ED_SIG=$(echo "$SPARKLE_OUTPUT" | grep -o 'edSignature="[^"]*"' | cut -d'"' -f2)
           DMG_LENGTH=$(echo "$SPARKLE_OUTPUT" | grep -o 'length="[^"]*"' | cut -d'"' -f2)
