@@ -36,10 +36,16 @@ jobs:
         run: |
           APP="dist/Vuvuzela.app"
           mkdir -p "$APP/Contents/MacOS"
-          cp .build/release/Vuvuzela "$APP/Contents/MacOS/Vuvuzela"
-          cp Resources/Info.plist "$APP/Contents/Info.plist"
           mkdir -p "$APP/Contents/Resources"
+          mkdir -p "$APP/Contents/Frameworks"
+          cp .build/release/Vuvuzela "$APP/Contents/MacOS/Vuvuzela"
+          cp -R .build/release/Sparkle.framework "$APP/Contents/Frameworks/Sparkle.framework"
+          install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Vuvuzela"
+          cp Resources/Info.plist "$APP/Contents/Info.plist"
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+          codesign --force --options runtime \
+            --sign "Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)" \
+            "$APP/Contents/Frameworks/Sparkle.framework"
           codesign --force --options runtime \
             --sign "Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)" \
             "$APP"
