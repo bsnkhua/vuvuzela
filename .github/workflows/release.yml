@@ -45,10 +45,13 @@ jobs:
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
           SIGN="Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)"
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
-          # Sign XPC services first, then framework, then app
-          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/XPCServices/Downloader.xpc"
-          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/XPCServices/Installer.xpc"
-          codesign --force --options runtime --sign "$SIGN" "$APP/Contents/Frameworks/Sparkle.framework"
+          # Sign XPC services preserving their original entitlements, then framework, then app
+          codesign --force --options runtime --preserve-metadata=entitlements,identifier \
+            --sign "$SIGN" "$SPARKLE/XPCServices/Downloader.xpc"
+          codesign --force --options runtime --preserve-metadata=entitlements,identifier \
+            --sign "$SIGN" "$SPARKLE/XPCServices/Installer.xpc"
+          codesign --force --options runtime --sign "$SIGN" \
+            "$APP/Contents/Frameworks/Sparkle.framework"
           codesign --force --options runtime --sign "$SIGN" "$APP"
 
       - name: Create DMG
@@ -74,7 +77,13 @@ jobs:
             --team-id "$APPLE_TEAM_ID" \
             --wait 2>&1)
           echo "$OUTPUT"
-          echo "$OUTPUT" | grep -q "status: Accepted" || { echo "Notarization rejected!"; exit 1; }
+          SUBMISSION_ID=$(echo "$OUTPUT" | grep '  id:' | head -1 | awk '{print $2}')
+          if ! echo "$OUTPUT" | grep -q "status: Accepted"; then
+            echo "Notarization rejected! Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" 2>&1 || true
+            exit 1
+          fi
 
       - name: Staple notarization ticket
         run: xcrun stapler staple dist/Vuvuzela.dmg
