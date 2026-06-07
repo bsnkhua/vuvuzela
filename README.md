@@ -6,11 +6,12 @@
 
 **Vuvuzela** is a lightweight macOS desktop widget for FIFA World Cup 2026 — live group standings, match schedule, and knockout bracket right on your desktop. A borderless window living at desktop level, above the wallpaper and below your app windows.
 
+<img src="assets/screenshot-groups.png" alt="Groups view" width="100%">
+
 <table>
   <tr>
-    <td><img src="assets/screenshot-groups.png" alt="Groups view"></td>
-    <td><img src="assets/screenshot-matches.jpeg" alt="Matches view"></td>
-    <td><img src="assets/screenshot-bracket.jpeg" alt="Bracket view"></td>
+    <td width="50%"><img src="assets/screenshot-matches.jpeg" alt="Matches view" width="100%"></td>
+    <td width="50%"><img src="assets/screenshot-bracket.jpeg" alt="Bracket view" width="100%"></td>
   </tr>
 </table>
 
