@@ -74,8 +74,9 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          pip3 install cryptography --quiet
-          python3 << 'PYEOF' >> "$GITHUB_ENV"
+          python3 -m venv /tmp/sparkle-venv
+          /tmp/sparkle-venv/bin/pip install cryptography --quiet
+          /tmp/sparkle-venv/bin/python3 << 'PYEOF' >> "$GITHUB_ENV"
           import base64, os
           from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
           key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(os.environ['SPARKLE_PRIVATE_KEY']))
