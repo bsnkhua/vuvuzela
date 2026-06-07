@@ -45,11 +45,13 @@ jobs:
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
           SIGN="Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)"
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
-          # Sign XPC services preserving their original entitlements, then framework, then app
+          # Sign all Sparkle internals from deepest to outermost
           codesign --force --options runtime --preserve-metadata=entitlements,identifier \
             --sign "$SIGN" "$SPARKLE/XPCServices/Downloader.xpc"
           codesign --force --options runtime --preserve-metadata=entitlements,identifier \
             --sign "$SIGN" "$SPARKLE/XPCServices/Installer.xpc"
+          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/Autoupdate"
+          codesign --force --options runtime --sign "$SIGN" "$SPARKLE/Updater.app"
           codesign --force --options runtime --sign "$SIGN" \
             "$APP/Contents/Frameworks/Sparkle.framework"
           codesign --force --options runtime --sign "$SIGN" "$APP"
