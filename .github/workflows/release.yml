@@ -27,6 +27,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
           rm /tmp/cert.p12
 
+      # The macos runner image can ship a stale SwiftPM binary-artifact cache,
+      # which makes the Sparkle download fail with "already exists in file system".
+      - name: Clear stale SwiftPM cache
+        run: rm -rf ~/Library/Caches/org.swift.swiftpm
+
       - name: Build release binary
         run: swift build -c release --disable-sandbox
 
