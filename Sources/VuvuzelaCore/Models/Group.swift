@@ -24,7 +24,20 @@ struct TeamRow: Identifiable, Sendable {
     var qualificationStatus: QualificationStatus
     var isFavorite: Bool = false
 
-    enum QualificationStatus: Sendable {
+    // Set while the team is in a live match (nil otherwise) — drives the
+    // standings-row "who's playing / who's winning" highlight.
+    var liveState: LiveState? = nil
+    var liveScoreFor: Int? = nil       // this team's goals in the live match
+    var liveScoreAgainst: Int? = nil   // the opponent's goals
+    var liveClock: String? = nil       // "67'" while playing, "HT" at the break
+
+    enum LiveState: Sendable, Equatable {
+        case winning
+        case losing
+        case drawing
+    }
+
+    enum QualificationStatus: Sendable, Equatable {
         case direct        // top 2 → guaranteed R32
         case bestThirdIn   // rank 3, currently in top-8 third-place
         case bestThirdOut  // rank 3, currently outside top-8

@@ -70,49 +70,71 @@ private struct HeaderView: View {
     let store: WorldCupStore
     @Binding var activeTab: WidgetTab
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
+    @AppStorage(WidgetSettings.soundEnabledKey) private var soundEnabled = true
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Logo + title
-            HStack(spacing: 6) {
-                Text("⚽")
-                    .font(.system(size: 14))
-                Text("FIFA World Cup 2026")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-            }
+        ZStack {
+            KofiButton()
 
-            Spacer()
+            HStack(spacing: 12) {
+                // Logo + title
+                HStack(spacing: 6) {
+                    Text("⚽")
+                        .font(.system(size: 14))
+                    Text("FIFA World Cup 2026")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                }
 
-            // Pill tabs
-            HStack(spacing: 2) {
-                ForEach(WidgetTab.allCases, id: \.self) { tab in
-                    tabButton(tab)
-                }
-            }
-            .padding(3)
-            .background(Color(white: 1, opacity: 0.06), in: Capsule())
+                Spacer()
 
-            // Status indicators + lock
-            HStack(spacing: 6) {
-                if !store.liveMatches.isEmpty {
-                    LiveIndicator()
+                // Pill tabs
+                HStack(spacing: 2) {
+                    ForEach(WidgetTab.allCases, id: \.self) { tab in
+                        tabButton(tab)
+                    }
                 }
-                if store.isLoading {
-                    ProgressView()
-                        .scaleEffect(0.5)
-                        .frame(width: 14, height: 14)
-                } else if let updated = store.lastUpdated, !store.liveMatches.isEmpty {
-                    Text(updated, style: .relative)
-                        .font(.system(size: 9))
-                        .foregroundStyle(Theme.textDim)
-                        .frame(width: 36, alignment: .trailing)
+                .padding(3)
+                .background(Color(white: 1, opacity: 0.06), in: Capsule())
+
+                // Status indicators + lock
+                HStack(spacing: 6) {
+                    if !store.liveMatches.isEmpty {
+                        LiveIndicator()
+                    }
+                    if store.isLoading {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 14, height: 14)
+                    } else if let updated = store.lastUpdated, !store.liveMatches.isEmpty {
+                        Text(updated, style: .relative)
+                            .font(.system(size: 9))
+                            .foregroundStyle(Theme.textDim)
+                            .frame(width: 36, alignment: .trailing)
+                    }
+                    soundButton
+                    lockButton
                 }
-                lockButton
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+
+    private var soundButton: some View {
+        Button {
+            soundEnabled.toggle()
+        } label: {
+            Image(systemName: soundEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(soundEnabled ? Theme.textDim : Theme.warning)
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(soundEnabled
+            ? "Goal sound on — click to mute"
+            : "Goal sound muted — click to unmute")
     }
 
     @ViewBuilder
@@ -143,6 +165,44 @@ private struct HeaderView: View {
         .help(positionLocked
             ? "Position locked — click to unlock"
             : "Click to lock the widget position")
+    }
+}
+
+private struct KofiButton: View {
+    @State private var hovering = false
+
+    private let kofiRed = Color(red: 1.0, green: 0.369, blue: 0.357)   // #FF5E5B
+    private let kofiBg  = Color(red: 0.10, green: 0.10, blue: 0.10)    // near-black
+
+    var body: some View {
+        Button {
+            NSWorkspace.shared.open(URL(string: "https://ko-fi.com/bsnkhua")!)
+        } label: {
+            HStack(spacing: 0) {
+                HStack(spacing: 4) {
+                    Image(systemName: "cup.and.saucer.fill")
+                        .font(.system(size: 9, weight: .medium))
+                    Text("Ko-fi")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(kofiBg)
+
+                Text("Support")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(kofiRed)
+            }
+            .clipShape(Capsule())
+            .opacity(hovering ? 0.80 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .help("Support on Ko-fi ☕")
     }
 }
 

@@ -44,6 +44,9 @@ jobs:
           cp Resources/Info.plist "$APP/Contents/Info.plist"
           cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
           cp Resources/vuvuzela-menubar.png "$APP/Contents/Resources/vuvuzela-menubar.png"
+          cp Resources/goal.caf "$APP/Contents/Resources/goal.caf"
+          cp Resources/start.caf "$APP/Contents/Resources/start.caf"
+          cp Resources/finish.caf "$APP/Contents/Resources/finish.caf"
           SIGN="Developer ID Application: Serhii Bezbabnykh ($APPLE_TEAM_ID)"
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
           # Sign all Sparkle internals from deepest to outermost

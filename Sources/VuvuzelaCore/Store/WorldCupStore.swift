@@ -25,6 +25,13 @@ public final class WorldCupStore {
     @ObservationIgnored private var isSuspended = false
     @ObservationIgnored private var scheduleLastFetched: Date?
 
+    // Demo / simulation mode — enabled with the DEMO=1 environment variable.
+    @ObservationIgnored private var demoFixtures: [DemoFixture] = []
+    @ObservationIgnored private var demoBaseGroups: [GroupStanding] = []
+    @ObservationIgnored private var demoKickoff = Date()
+    @ObservationIgnored private var demoMinute = 0
+    var isDemoMode: Bool { ProcessInfo.processInfo.environment["DEMO"] == "1" }
+
     // Tournament ends July 19 2026
     private static let tournamentEnd: Date = {
         var c = DateComponents(); c.year = 2026; c.month = 7; c.day = 19
@@ -35,6 +42,7 @@ public final class WorldCupStore {
 
     public func start() {
         stop()
+        if isDemoMode { startDemo(); return }
         goalNotifier.requestAuthorization()
         Task { await refresh() }
         scheduleNextTick()
@@ -127,7 +135,7 @@ public final class WorldCupStore {
 
     // Recalculates which rank-3 teams are in the best-8 using FIFA tiebreakers.
     // ESPN marks ALL 12 rank-3 teams as conditional — we override that here.
-    private func applyBestThirdCalculation(_ groups: inout [GroupStanding]) {
+    func applyBestThirdCalculation(_ groups: inout [GroupStanding]) {
         var thirdPlace: [(gi: Int, ti: Int, team: TeamRow)] = []
         for (gi, group) in groups.enumerated() {
             if let ti = group.teams.firstIndex(where: { $0.rank == 3 }) {
@@ -158,7 +166,7 @@ public final class WorldCupStore {
 
     // Applies in-progress match scores to group standings so positions update live.
     // Only affects groups where both competitors are found in the same group (= group stage).
-    private func applyLiveScores(_ groups: inout [GroupStanding], from matches: [Match]) {
+    func applyLiveScores(_ groups: inout [GroupStanding], from matches: [Match]) {
         for match in matches {
             let ha = match.homeTeam.abbreviation
             let aa = match.awayTeam.abbreviation
@@ -195,6 +203,19 @@ public final class WorldCupStore {
                 groups[gi].teams[hi].losses += 1
                 groups[gi].teams[ai].wins   += 1; groups[gi].teams[ai].points += 3
             }
+
+            // Flag the live in-play state so the standings can highlight who is
+            // playing and who's ahead. Only for matches still in progress — a
+            // finished match leaves no highlight.
+            if match.isLive || match.status == .halftime {
+                groups[gi].teams[hi].liveState = hs > as_ ? .winning : (hs < as_ ? .losing : .drawing)
+                groups[gi].teams[ai].liveState = as_ > hs ? .winning : (as_ < hs ? .losing : .drawing)
+                groups[gi].teams[hi].liveScoreFor = hs; groups[gi].teams[hi].liveScoreAgainst = as_
+                groups[gi].teams[ai].liveScoreFor = as_; groups[gi].teams[ai].liveScoreAgainst = hs
+                let clock = match.status == .halftime ? "HT" : match.minute.map { "\($0)'" }
+                groups[gi].teams[hi].liveClock = clock
+                groups[gi].teams[ai].liveClock = clock
+            }
         }
 
         // Re-sort within each group and update ranks + qualification indicators
@@ -223,6 +244,7 @@ public final class WorldCupStore {
         let todayMatches = (try? await matchesCollector.fetch(date: nil)) ?? []
         liveMatches    = todayMatches.filter { $0.isLive || $0.status == .halftime }
         recentMatches  = todayMatches.filter { $0.isFinished }.sorted { $0.kickoff > $1.kickoff }
+        goalNotifier.checkMatchLifecycle(matches: todayMatches, favoriteTeams: favoriteTeams)
         goalNotifier.check(matches: liveMatches, favoriteTeams: favoriteTeams)
 
         // Refresh full tournament schedule at most once per hour
@@ -245,5 +267,54 @@ public final class WorldCupStore {
 
     private func refreshBracket() async {
         bracketRounds = await bracketCollector.fetch()
+    }
+
+    // MARK: - Demo mode
+
+    // Drives a scripted matchday with no network: seeds standings + favorites,
+    // then ticks a fast clock that scores goals on a timeline. Every snapshot is
+    // pushed through the SAME projection (applyLiveScores) and notification paths
+    // as production, so what you watch is the real logic — just fed fake data.
+    private func startDemo() {
+        favoriteTeams = DemoData.favorites          // in-memory only — not persisted
+        goalNotifier.requestAuthorization()
+        demoBaseGroups = DemoData.baseGroups(favorites: favoriteTeams)
+        demoFixtures = DemoData.fixtures()
+        demoKickoff = Date()
+        demoMinute = 0
+        renderDemo()
+
+        timer = Timer.scheduledTimer(withTimeInterval: DemoData.secondsPerMinute, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.demoTick() }
+        }
+    }
+
+    private func demoTick() {
+        demoMinute += 1
+        DemoData.apply(minute: demoMinute, to: &demoFixtures)
+        renderDemo()
+        if demoMinute >= 92 {           // a couple ticks past full time, then freeze
+            timer?.invalidate()
+            timer = nil
+        }
+    }
+
+    private func renderDemo() {
+        let matches = demoFixtures.map { $0.toMatch(kickoff: demoKickoff) }
+
+        // Project every match that has started (live or finished) onto the base
+        // standings so positions keep reflecting results after full time too.
+        var projected = demoBaseGroups
+        let played = matches.filter { $0.status != .scheduled && $0.status != .postponed }
+        if !played.isEmpty { applyLiveScores(&projected, from: played) }
+        groups = projected
+
+        liveMatches     = matches.filter { $0.isLive || $0.status == .halftime }
+        recentMatches   = matches.filter { $0.isFinished }.sorted { $0.kickoff > $1.kickoff }
+        upcomingMatches = matches.filter { $0.status == .scheduled }
+
+        goalNotifier.checkMatchLifecycle(matches: matches, favoriteTeams: favoriteTeams)
+        goalNotifier.check(matches: liveMatches, favoriteTeams: favoriteTeams)
+        lastUpdated = Date()
     }
 }

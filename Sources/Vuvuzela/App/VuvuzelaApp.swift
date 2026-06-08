@@ -10,6 +10,7 @@ struct VuvuzelaApp: App {
 
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
     @AppStorage(WidgetSettings.backgroundOpacityKey) private var backgroundOpacity = WidgetSettings.defaultOpacity
+    @AppStorage(WidgetSettings.highlightLiveResultsKey) private var highlightLiveResults = true
 
     var body: some Scene {
         MenuBarExtra {
@@ -21,6 +22,7 @@ struct VuvuzelaApp: App {
             }
             Divider()
             Toggle("Lock position", isOn: $positionLocked)
+            Toggle("Highlight live results", isOn: $highlightLiveResults)
             LaunchAtLoginToggle()
             if #unavailable(macOS 26) {
                 Menu("Opacity") {

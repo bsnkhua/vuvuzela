@@ -23,6 +23,11 @@ enum Theme {
     // Live match pulse
     static let live = Color(red: 1.0, green: 0.27, blue: 0.27)
 
+    // Live result highlight in the standings rows
+    static let liveWinning = Color(red: 0.30, green: 0.80, blue: 0.45)   // green – ahead
+    static let liveLosing  = Color(red: 0.95, green: 0.30, blue: 0.32)   // red – behind
+    static let liveDrawing = Color(red: 1.0,  green: 0.62, blue: 0.10)   // amber – level
+
     // Warning / lock
     static let warning = Color(red: 1.0, green: 0.62, blue: 0.04)
 

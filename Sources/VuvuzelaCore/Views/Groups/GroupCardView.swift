@@ -73,6 +73,8 @@ private struct TeamRowView: View {
     let team: TeamRow
     let store: WorldCupStore
 
+    @AppStorage(WidgetSettings.highlightLiveResultsKey) private var highlightLiveResults = true
+
     var body: some View {
         HStack(spacing: 0) {
             // Qualification color bar
@@ -95,6 +97,8 @@ private struct TeamRowView: View {
                         .foregroundStyle(team.isFavorite ? Color.yellow : Theme.textPrimary)
                 }
                 .frame(width: 58, alignment: .leading)
+
+                liveScoreChip
 
                 Spacer()
 
@@ -119,11 +123,58 @@ private struct TeamRowView: View {
             .padding(.horizontal, 4)
         }
         .frame(height: 22)
+        .background(LiveRowBackground(tint: liveTint))
         .contentShape(Rectangle())
         .onTapGesture {
             store.toggleFavorite(team.abbreviation)
         }
         .help("Tap to \(team.isFavorite ? "unmark" : "mark") \(team.displayName) as favourite")
+    }
+
+    // Background wash for a team currently in a live match: neutral when the
+    // result-highlight mode is off (just "this team is playing"), tinted by the
+    // live result when it's on. nil = not playing → no highlight.
+    private var liveTint: Color? {
+        guard let state = team.liveState else { return nil }
+        guard highlightLiveResults else { return Color.white.opacity(0.18) }
+        switch state {
+        case .winning: return Theme.liveWinning.opacity(0.22)
+        case .losing:  return Theme.liveLosing.opacity(0.22)
+        case .drawing: return Theme.liveDrawing.opacity(0.22)
+        }
+    }
+
+    // Compact live scoreline next to the team name, e.g. "2–1" from this team's
+    // perspective, coloured by who's ahead. Shown only while the match is live.
+    @ViewBuilder
+    private var liveScoreChip: some View {
+        if let f = team.liveScoreFor, let a = team.liveScoreAgainst {
+            HStack(spacing: 4) {
+                Text("\(f)–\(a)")
+                    .font(.system(size: 9, weight: .bold))
+                    .monospacedDigit()
+                if let clock = team.liveClock {
+                    Text(clock)
+                        .font(.system(size: 8, weight: .medium))
+                        .monospacedDigit()
+                        .opacity(0.75)
+                }
+            }
+            .foregroundStyle(scoreColor)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(scoreColor.opacity(0.16), in: Capsule())
+            .padding(.leading, 5)
+        }
+    }
+
+    private var scoreColor: Color {
+        switch team.liveState {
+        case .winning: return Theme.liveWinning
+        case .losing:  return Theme.liveLosing
+        case .drawing: return Theme.liveDrawing
+        case .none:    return Theme.textSecondary
+        }
     }
 
     @ViewBuilder
@@ -143,5 +194,24 @@ private struct TeamRowView: View {
             .font(.system(size: 10))
             .foregroundStyle(Theme.textSecondary)
             .frame(width: 20, alignment: .center)
+    }
+}
+
+// Gently pulsing fill for live standings rows — the pulse signals "in play",
+// the colour signals who's ahead. nil tint renders nothing.
+private struct LiveRowBackground: View {
+    let tint: Color?
+    @State private var pulse = false
+
+    var body: some View {
+        Group {
+            if let tint {
+                tint.opacity(pulse ? 0.9 : 0.4)
+                    .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: pulse)
+            } else {
+                Color.clear
+            }
+        }
+        .onAppear { pulse = true }
     }
 }

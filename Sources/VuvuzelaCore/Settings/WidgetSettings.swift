@@ -11,9 +11,21 @@ public enum WidgetSettings {
     public static let favoriteTeamsKey = "favoriteTeams"
     public static let launchAtLoginKey = "launchAtLogin"
     public static let activeTabKey = "activeTab"
+    public static let highlightLiveResultsKey = "highlightLiveResults"   // default: on
+    public static let soundEnabledKey = "soundEnabled"                   // default: on
 
     public static func clampWidth(_ w: Double) -> Double { min(max(w, minWidth), maxWidth) }
     public static func clampOpacity(_ o: Double) -> Double { min(max(o, 0.3), 1.0) }
+
+    // Defaults to true when never set (UserDefaults.bool would return false).
+    public static var soundEnabled: Bool {
+        get {
+            UserDefaults.standard.object(forKey: soundEnabledKey) == nil
+                ? true
+                : UserDefaults.standard.bool(forKey: soundEnabledKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: soundEnabledKey) }
+    }
 
     public static var favoriteTeams: Set<String> {
         get {
