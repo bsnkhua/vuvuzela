@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import VuvuzelaCore
 
@@ -41,5 +42,26 @@ struct VersionCompareTests {
         #expect(isNewerVersion("v2.0.0", than: "1.9.9"))
         #expect(!isNewerVersion("v1.0.0", than: "1.0.0"))
         #expect(!isNewerVersion("v0.9.0", than: "1.0.0"))
+    }
+}
+
+@Suite("WidgetVisibility")
+struct WidgetVisibilityTests {
+    @Test func defaultsToVisibleWhenKeyAbsent() {
+        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        // Key not set at all — must default to true
+        #expect(WidgetSettings.isVisible(in: defaults))
+    }
+
+    @Test func respectsExplicitFalse() {
+        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        defaults.set(false, forKey: WidgetSettings.widgetVisibleKey)
+        #expect(!WidgetSettings.isVisible(in: defaults))
+    }
+
+    @Test func respectsExplicitTrue() {
+        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        defaults.set(true, forKey: WidgetSettings.widgetVisibleKey)
+        #expect(WidgetSettings.isVisible(in: defaults))
     }
 }

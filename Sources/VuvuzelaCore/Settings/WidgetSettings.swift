@@ -13,6 +13,13 @@ public enum WidgetSettings {
     public static let activeTabKey = "activeTab"
     public static let highlightLiveResultsKey = "highlightLiveResults"   // default: on
     public static let soundEnabledKey = "soundEnabled"                   // default: on
+    public static let widgetVisibleKey = "widgetVisible"                 // default: on
+
+    public static func isVisible(in defaults: UserDefaults) -> Bool {
+        defaults.object(forKey: widgetVisibleKey) == nil
+            ? true
+            : defaults.bool(forKey: widgetVisibleKey)
+    }
 
     public static func clampWidth(_ w: Double) -> Double { min(max(w, minWidth), maxWidth) }
     public static func clampOpacity(_ o: Double) -> Double { min(max(o, 0.3), 1.0) }
