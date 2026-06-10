@@ -71,6 +71,7 @@ private struct HeaderView: View {
     @Binding var activeTab: WidgetTab
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
     @AppStorage(WidgetSettings.soundEnabledKey) private var soundEnabled = true
+    @AppStorage(WidgetSettings.widgetVisibleKey) private var widgetVisible = true
 
     var body: some View {
         ZStack {
@@ -114,6 +115,7 @@ private struct HeaderView: View {
                     }
                     soundButton
                     lockButton
+                    hideButton
                 }
             }
         }
@@ -149,6 +151,20 @@ private struct HeaderView: View {
                 .background(isActive ? Color(white: 1, opacity: 0.12) : Color.clear, in: Capsule())
         }
         .buttonStyle(.plain)
+    }
+
+    private var hideButton: some View {
+        Button {
+            widgetVisible = false
+        } label: {
+            Image(systemName: "eye.slash")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Theme.textDim)
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("Hide widget — bring it back from the menu bar icon")
     }
 
     private var lockButton: some View {
