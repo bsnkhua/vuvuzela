@@ -17,11 +17,9 @@ struct DemoModeTests {
             DemoData.apply(minute: minute, to: &fixtures)
         }
 
-        // Final scripted scorelines.
-        let fraMex = fixtures.first { $0.id == "demo-A-FRAMEX" }!
-        let argCro = fixtures.first { $0.id == "demo-A-ARGCRO" }!
-        #expect(fraMex.homeScore == 3 && fraMex.awayScore == 2)   // FRA 3-2 MEX
-        #expect(argCro.homeScore == 2 && argCro.awayScore == 1)   // ARG 2-1 CRO
+        // Final scripted scoreline for Group A's single live match.
+        let mexFra = fixtures.first { $0.id == "demo-A" }!
+        #expect(mexFra.homeScore == 3 && mexFra.awayScore == 1)   // MEX 3-1 FRA
         #expect(fixtures.allSatisfy { $0.status == .finished })
 
         // Project the finished results onto the matchday-1 base standings.
@@ -31,11 +29,12 @@ struct DemoModeTests {
         let a = groups.first { $0.abbreviation == "A" }!.teams
 
         func t(_ abbr: String) -> TeamRow { a.first { $0.abbreviation == abbr }! }
-        #expect(t("ARG").points == 6 && t("ARG").rank == 1)   // two wins → top
-        #expect(t("FRA").points == 3)                          // lost md1, won md2
-        #expect(t("MEX").points == 3)                          // won md1, lost md2
-        #expect(t("CRO").points == 0 && t("CRO").rank == 4)   // two losses → bottom
-        #expect(a.allSatisfy { $0.gamesPlayed == 2 })
+        #expect(t("MEX").points == 6 && t("MEX").rank == 1)   // won md1, won live → top
+        #expect(t("FRA").points == 0 && t("FRA").rank == 4)   // lost md1, lost live → bottom
+        #expect(t("ARG").points == 3)                          // won md1, no live match
+        // Only the live match advances a game; the other two stay on matchday 1.
+        #expect(t("MEX").gamesPlayed == 2 && t("FRA").gamesPlayed == 2)
+        #expect(t("ARG").gamesPlayed == 1 && t("CRO").gamesPlayed == 1)
     }
 
     // The timeline passes through a half-time break and resumes for the 2nd half.
@@ -61,8 +60,8 @@ struct DemoModeTests {
         var fixtures = DemoData.fixtures()
         for minute in 1...90 { DemoData.apply(minute: minute, to: &fixtures) }
 
-        let espPor = fixtures.first { $0.id == "demo-B-ESPPOR" }!
-        #expect(espPor.homeScore == 2 && espPor.awayScore == 1)   // ESP 2-1 POR
+        let espBra = fixtures.first { $0.id == "demo-B" }!
+        #expect(espBra.homeScore == 3 && espBra.awayScore == 0)   // ESP 3-0 BRA
 
         let matches = fixtures.map { $0.toMatch(kickoff: Date()) }
         var groups = base
@@ -72,18 +71,19 @@ struct DemoModeTests {
         #expect(esp.points == 6)   // won both matchdays
     }
 
-    // The favorite (Mexico) scores twice — the goals that should trigger alerts.
-    @Test func favoriteScoresTwice() {
+    // The favorite (Mexico, now the home side) scores three times — the goals
+    // that should trigger alerts.
+    @Test func favoriteScoresThrice() {
         var fixtures = DemoData.fixtures()
         var mexGoals = 0
         var prev = 0
         for minute in 1...90 {
             DemoData.apply(minute: minute, to: &fixtures)
-            let mex = fixtures.first { $0.id == "demo-A-FRAMEX" }!.awayScore
+            let mex = fixtures.first { $0.id == "demo-A" }!.homeScore
             if mex > prev { mexGoals += 1 }
             prev = mex
         }
         #expect(DemoData.favorites.contains("MEX"))
-        #expect(mexGoals == 2)
+        #expect(mexGoals == 3)
     }
 }

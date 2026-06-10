@@ -4,11 +4,11 @@ import Foundation
 // (enabled with the DEMO=1 environment variable). Kept fully separate from the
 // production data path so none of this can leak into a real run.
 //
-// The story it tells, in Group A on the final group matchday (two matches kicking
-// off together so the standings churn live):
-//   • FRA vs MEX  — MEX is a favorite; it scores at 22' and 70' → goal alerts + sound
-//   • ARG vs CRO
-// Group B is static, just to show a second group with a non-live favorite (ESP).
+// The story it tells: every group has one live match on the final group matchday,
+// so the standings churn live. The two favorites are the home sides that score
+// repeatedly → goal alerts + sound:
+//   • Group A — MEX vs FRA — MEX scores at 20', 40' and 70' (final 3-1)
+//   • Group B — ESP vs BRA — ESP scores at 12', 50' and 80' (final 3-0)
 
 /// A mutable fixture the simulator drives. Separate from the production `Match`
 /// (whose fields are immutable) so the demo can mutate scores/status freely and
