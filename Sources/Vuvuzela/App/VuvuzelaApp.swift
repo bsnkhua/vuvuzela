@@ -184,6 +184,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let window else { return }
         let shouldBeVisible = WidgetSettings.isVisible(in: .standard)
         if shouldBeVisible, !window.isVisible {
+            // store.resume() is intentionally omitted — the occlusion observer
+            // fires after orderFrontRegardless() and calls resume() from there.
             window.orderFrontRegardless()
         } else if !shouldBeVisible, window.isVisible {
             window.orderOut(nil)
