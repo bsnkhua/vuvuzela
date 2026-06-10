@@ -185,7 +185,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let shouldBeVisible = WidgetSettings.isVisible(in: .standard)
         if shouldBeVisible, !window.isVisible {
             window.orderFrontRegardless()
-            store.resume()
         } else if !shouldBeVisible, window.isVisible {
             window.orderOut(nil)
             store.suspend()
