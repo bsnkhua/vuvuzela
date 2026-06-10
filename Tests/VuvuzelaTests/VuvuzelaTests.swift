@@ -48,19 +48,25 @@ struct VersionCompareTests {
 @Suite("WidgetVisibility")
 struct WidgetVisibilityTests {
     @Test func defaultsToVisibleWhenKeyAbsent() {
-        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        let name = "test.visibility.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removeSuite(named: name) }
         // Key not set at all — must default to true
         #expect(WidgetSettings.isVisible(in: defaults))
     }
 
     @Test func respectsExplicitFalse() {
-        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        let name = "test.visibility.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removeSuite(named: name) }
         defaults.set(false, forKey: WidgetSettings.widgetVisibleKey)
         #expect(!WidgetSettings.isVisible(in: defaults))
     }
 
     @Test func respectsExplicitTrue() {
-        let defaults = UserDefaults(suiteName: "test.visibility.\(Int.random(in: 1...999999))")!
+        let name = "test.visibility.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removeSuite(named: name) }
         defaults.set(true, forKey: WidgetSettings.widgetVisibleKey)
         #expect(WidgetSettings.isVisible(in: defaults))
     }
