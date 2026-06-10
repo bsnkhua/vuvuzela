@@ -11,6 +11,7 @@ struct VuvuzelaApp: App {
     @AppStorage(WidgetSettings.positionLockedKey) private var positionLocked = false
     @AppStorage(WidgetSettings.backgroundOpacityKey) private var backgroundOpacity = WidgetSettings.defaultOpacity
     @AppStorage(WidgetSettings.highlightLiveResultsKey) private var highlightLiveResults = true
+    @AppStorage(WidgetSettings.widgetVisibleKey) private var widgetVisible = true
 
     var body: some Scene {
         MenuBarExtra {
@@ -22,6 +23,7 @@ struct VuvuzelaApp: App {
             }
             Divider()
             Toggle("Lock position", isOn: $positionLocked)
+            Toggle("Show on desktop", isOn: $widgetVisible)
             Toggle("Highlight live results", isOn: $highlightLiveResults)
             LaunchAtLoginToggle()
             if #unavailable(macOS 26) {
@@ -145,7 +147,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.center()
         window.setFrameAutosaveName("VuvuzelaWindow")
-        window.orderFrontRegardless()
+        if WidgetSettings.isVisible(in: .standard) {
+            window.orderFrontRegardless()
+        } else {
+            store.suspend()
+        }
         self.window = window
 
         NotificationCenter.default.addObserver(
@@ -165,10 +171,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.syncWindowSize() }
+            MainActor.assumeIsolated {
+                self?.syncWindowSize()
+                self?.reconcileVisibility()
+            }
         }
 
         syncWindowSize()
+    }
+
+    private func reconcileVisibility() {
+        guard let window else { return }
+        let shouldBeVisible = WidgetSettings.isVisible(in: .standard)
+        if shouldBeVisible, !window.isVisible {
+            window.orderFrontRegardless()
+            store.resume()
+        } else if !shouldBeVisible, window.isVisible {
+            window.orderOut(nil)
+            store.suspend()
+        }
     }
 
     private func syncWindowSize() {
