@@ -251,8 +251,10 @@ public final class WorldCupStore {
         let scheduleStale = scheduleLastFetched.map { Date().timeIntervalSince($0) > 3600 } ?? true
         if scheduleStale {
             let all = await matchesCollector.fetchRange(from: Date(), to: Self.tournamentEnd)
-            scheduleLastFetched = Date()
-            upcomingMatches = all.filter { $0.status == .scheduled }.sorted { $0.kickoff < $1.kickoff }
+            if !all.isEmpty {
+                scheduleLastFetched = Date()
+                upcomingMatches = all.filter { $0.status == .scheduled }.sorted { $0.kickoff < $1.kickoff }
+            }
         } else {
             // Replace only today's scheduled matches; keep future cache intact
             let todayUpcoming = todayMatches.filter {
