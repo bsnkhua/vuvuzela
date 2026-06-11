@@ -31,17 +31,12 @@ enum MatchStatus: Sendable, Equatable {
     case unknown
 }
 
-// MARK: - ESPN CDN Scoreboard Decodable
+// MARK: - ESPN Scoreboard Decodable
 
-struct ESPNCDNScoreboardResponse: Decodable {
-    let content: ESPNCDNContent
-}
-
-struct ESPNCDNContent: Decodable {
-    let sbData: ESPNScoreboardData
-}
-
-struct ESPNScoreboardData: Decodable {
+// site.api scoreboard returns events at the top level. This is the real-time feed
+// the app reads from. (The cdn.espn.com/core endpoint nests under content.sbData and
+// is heavily CDN-cached — it lagged 15+ minutes behind kickoff, so we don't use it.)
+struct ESPNSiteScoreboardResponse: Decodable {
     let events: [ESPNEvent]?
 }
 
@@ -127,19 +122,37 @@ extension ESPNEvent {
 
         let kickoff = parseESPNDate(date)
 
+        // ESPN soccer never sends STATUS_IN_PROGRESS — it sends STATUS_FIRST_HALF,
+        // STATUS_SECOND_HALF, STATUS_EXTRA_TIME, STATUS_FINAL_PEN, and many more.
+        // The stable signal is the `state` bucket (pre / in / post); we only special-case
+        // the names that carry meaning `state` can't (halftime, postponements).
         let statusName = comp.status?.type?.name ?? ""
+        let statusState = comp.status?.type?.state ?? ""
         let matchStatus: MatchStatus
         switch statusName {
-        case "STATUS_SCHEDULED": matchStatus = .scheduled
-        case "STATUS_IN_PROGRESS": matchStatus = .live
-        case "STATUS_HALFTIME": matchStatus = .halftime
-        case "STATUS_FINAL", "STATUS_FULL_TIME": matchStatus = .finished
-        case "STATUS_POSTPONED", "STATUS_CANCELED": matchStatus = .postponed
-        default: matchStatus = .unknown
+        case "STATUS_HALFTIME":
+            matchStatus = .halftime
+        case "STATUS_POSTPONED", "STATUS_CANCELED", "STATUS_CANCELLED", "STATUS_ABANDONED":
+            matchStatus = .postponed
+        default:
+            switch statusState {
+            case "pre":  matchStatus = .scheduled
+            case "in":   matchStatus = .live
+            case "post": matchStatus = .finished
+            default:     matchStatus = .unknown
+            }
         }
 
-        let clock = comp.status?.clock ?? 0
-        let minute = clock > 0 ? Int(clock / 60) : nil
+        // Prefer the human clock ("14'", "90'+3") — parse its leading minutes. Fall back
+        // to the numeric clock (seconds) only when no displayClock is present.
+        let minute: Int?
+        if matchStatus == .live, let dc = comp.status?.displayClock,
+           let parsed = Int(dc.prefix { $0.isNumber }), parsed > 0 {
+            minute = parsed
+        } else {
+            let clock = comp.status?.clock ?? 0
+            minute = (matchStatus == .live && clock > 0) ? Int(clock / 60) : nil
+        }
 
         let note = comp.notes?.first?.headline
         let groupName = note.flatMap { $0.contains("Group") ? $0 : nil }
