@@ -22,7 +22,7 @@ public final class WorldCupStore {
     @ObservationIgnored private let matchesCollector = MatchesCollector()
     @ObservationIgnored private let bracketCollector = BracketCollector()
     @ObservationIgnored private var timer: Timer?
-    @ObservationIgnored private var isSuspended = false
+    @ObservationIgnored private var appNapActivity: NSObjectProtocol?
     @ObservationIgnored private var scheduleLastFetched: Date?
 
     // Demo / simulation mode — enabled with the DEMO=1 environment variable.
@@ -42,6 +42,14 @@ public final class WorldCupStore {
 
     public func start() {
         stop()
+        // Polling must survive the widget being occluded (fullscreen apps, other
+        // Spaces) or explicitly hidden — goal notifications matter most exactly
+        // when the widget is not on screen. App Nap would otherwise throttle the
+        // timer once the window is no longer visible.
+        appNapActivity = ProcessInfo.processInfo.beginActivity(
+            options: .background,
+            reason: "Polling matches for goal notifications"
+        )
         if isDemoMode { startDemo(); return }
         goalNotifier.requestAuthorization()
         Task { await refresh() }
@@ -51,15 +59,10 @@ public final class WorldCupStore {
     public func stop() {
         timer?.invalidate()
         timer = nil
-    }
-
-    public func suspend() { isSuspended = true }
-
-    public func resume() {
-        guard isSuspended else { return }
-        isSuspended = false
-        Task { await refresh() }
-        scheduleNextTick()
+        if let appNapActivity {
+            ProcessInfo.processInfo.endActivity(appNapActivity)
+            self.appNapActivity = nil
+        }
     }
 
     public func toggleFavorite(_ abbreviation: String) {
@@ -88,11 +91,12 @@ public final class WorldCupStore {
         let interval = computeInterval()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self, !self.isSuspended else { return }
+                guard let self else { return }
                 await self.refresh()
                 self.scheduleNextTick()
             }
         }
+        timer?.tolerance = interval * 0.1
     }
 
     private func computeInterval() -> TimeInterval {

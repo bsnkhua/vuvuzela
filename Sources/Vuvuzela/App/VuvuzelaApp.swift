@@ -147,24 +147,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.center()
         window.setFrameAutosaveName("VuvuzelaWindow")
+        // Polling is never tied to window visibility: goal notifications must
+        // fire while the widget is occluded (fullscreen apps) or hidden.
         if WidgetSettings.isVisible(in: .standard) {
             window.orderFrontRegardless()
-        } else {
-            store.suspend()
         }
         self.window = window
-
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.didChangeOcclusionStateNotification,
-            object: window,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, let w = self.window else { return }
-                if w.occlusionState.contains(.visible) { self.store.resume() }
-                else { self.store.suspend() }
-            }
-        }
 
         NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
@@ -184,12 +172,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let window else { return }
         let shouldBeVisible = WidgetSettings.isVisible(in: .standard)
         if shouldBeVisible, !window.isVisible {
-            // store.resume() is intentionally omitted — the occlusion observer
-            // fires after orderFrontRegardless() and calls resume() from there.
             window.orderFrontRegardless()
         } else if !shouldBeVisible, window.isVisible {
             window.orderOut(nil)
-            store.suspend()
         }
     }
 
