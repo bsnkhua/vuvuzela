@@ -21,7 +21,7 @@ public final class WorldCupStore {
     @ObservationIgnored private let groupsCollector = GroupsCollector()
     @ObservationIgnored private let matchesCollector = MatchesCollector()
     @ObservationIgnored private let bracketCollector = BracketCollector()
-    @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored var timer: Timer?
     @ObservationIgnored private var appNapActivity: NSObjectProtocol?
     @ObservationIgnored private var scheduleLastFetched: Date?
 
@@ -53,6 +53,8 @@ public final class WorldCupStore {
         if isDemoMode { startDemo(); return }
         goalNotifier.requestAuthorization()
         Task { await refresh() }
+        // Safety net only: refresh() re-times the poll when it completes; this
+        // conservative tick covers the case where the first fetch never returns.
         scheduleNextTick()
     }
 
@@ -91,9 +93,10 @@ public final class WorldCupStore {
         let interval = computeInterval()
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self else { return }
-                await self.refresh()
-                self.scheduleNextTick()
+                // refresh() reschedules the next tick in its defer block; if it
+                // early-returns because another refresh is in flight, that
+                // refresh's defer keeps the chain alive instead.
+                await self?.refresh()
             }
         }
         timer?.tolerance = interval * 0.1
@@ -112,7 +115,12 @@ public final class WorldCupStore {
         guard !isLoading else { return }
         isLoading = true
         error = nil
-        defer { isLoading = false; lastUpdated = Date() }
+        // Re-timing in defer (not in the timer callback) keeps the poll cadence
+        // correct: the interval must be computed AFTER fresh data arrives, and a
+        // manual "Refresh Now" must re-time the next poll too. Scheduling from
+        // start() alone used the pre-fetch (empty) state — a 1-hour interval —
+        // which froze updates during live matches.
+        defer { isLoading = false; lastUpdated = Date(); scheduleNextTick() }
 
         async let groupsTask: Void = refreshGroups()
         async let matchesTask: Void = refreshMatches()
