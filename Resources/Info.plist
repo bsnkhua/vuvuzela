@@ -9,9 +9,9 @@
     <key>CFBundleDisplayName</key>
     <string>Vuvuzela</string>
     <key>CFBundleVersion</key>
-    <string>8</string>
+    <string>9</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2.1</string>
+    <string>1.2.2</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
