@@ -19,4 +19,20 @@ struct PollingTests {
 
         #expect(store.timer != nil, "refresh() must re-time the next poll")
     }
+
+    // Regression: when the last live match ended, computeInterval() jumped straight
+    // to the 1-hour idle cadence. ESPN's standings endpoint settles a few minutes
+    // AFTER the final whistle, so the table stayed stale until the next hourly poll
+    // (or a manual "Refresh Now"). A recently-finished match must keep a fast poll.
+    @Test func recentlyFinishedMatchKeepsFastCadence() {
+        let store = WorldCupStore()
+        store.recentFinishDeadline = Date().addingTimeInterval(600)
+        #expect(store.computeInterval() == 120)
+    }
+
+    @Test func idleStateUsesHourlyCadence() {
+        let store = WorldCupStore()
+        store.recentFinishDeadline = nil
+        #expect(store.computeInterval() == 3600)
+    }
 }

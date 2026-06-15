@@ -24,6 +24,10 @@ public final class WorldCupStore {
     @ObservationIgnored var timer: Timer?
     @ObservationIgnored private var appNapActivity: NSObjectProtocol?
     @ObservationIgnored private var scheduleLastFetched: Date?
+    // Set when a live match transitions to finished. ESPN's standings endpoint
+    // settles a few minutes after the final whistle, so we keep polling fast until
+    // this deadline instead of dropping straight to the 1-hour idle cadence.
+    @ObservationIgnored var recentFinishDeadline: Date?
 
     // Demo / simulation mode — enabled with the DEMO=1 environment variable.
     @ObservationIgnored private var demoFixtures: [DemoFixture] = []
@@ -102,8 +106,12 @@ public final class WorldCupStore {
         timer?.tolerance = interval * 0.1
     }
 
-    private func computeInterval() -> TimeInterval {
+    func computeInterval() -> TimeInterval {
         if !liveMatches.isEmpty { return 60 }   // live: every minute
+        // A match just ended? The standings endpoint lags the final whistle by a
+        // few minutes — keep polling fast so the table updates without a manual
+        // "Refresh Now". (See recentFinishDeadline.)
+        if let deadline = recentFinishDeadline, Date() < deadline { return 120 }
         // Match starting in < 1 hour?
         if let next = upcomingMatches.first, next.kickoff.timeIntervalSinceNow < 3600 {
             return 300  // 5 min
@@ -254,6 +262,16 @@ public final class WorldCupStore {
     private func refreshMatches() async {
         // Always fetch today for live scores
         let todayMatches = (try? await matchesCollector.fetch(date: nil)) ?? []
+        // Detect matches that just left the live set — they finished since the last
+        // poll, so the standings endpoint is about to settle. Poll fast for a window
+        // so the table updates on its own instead of needing a manual refresh.
+        let previousLiveIDs = Set(liveMatches.map(\.id))
+        let newlyFinished = todayMatches.contains {
+            $0.isFinished && previousLiveIDs.contains($0.id)
+        }
+        if newlyFinished {
+            recentFinishDeadline = Date().addingTimeInterval(900)  // 15 min
+        }
         liveMatches    = todayMatches.filter { $0.isLive || $0.status == .halftime }
         recentMatches  = todayMatches.filter { $0.isFinished }.sorted { $0.kickoff > $1.kickoff }
         goalNotifier.checkMatchLifecycle(matches: todayMatches, favoriteTeams: favoriteTeams)
