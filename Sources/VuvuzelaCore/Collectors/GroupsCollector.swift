@@ -6,7 +6,7 @@ actor GroupsCollector {
     )!
 
     func fetch(favoriteTeams: Set<String>) async throws -> [GroupStanding] {
-        let (data, response) = try await URLSession.shared.data(from: Self.standingsURL)
+        let (data, response) = try await URLSession.api.data(from: Self.standingsURL)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw CollectorError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
         }

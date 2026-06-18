@@ -43,7 +43,7 @@ actor MatchesCollector {
         if let date { urlString += "&dates=\(date)" }
         guard let url = URL(string: urlString) else { throw CollectorError.invalidURL }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.api.data(from: url)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw CollectorError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
         }
